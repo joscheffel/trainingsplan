@@ -1,0 +1,9 @@
+version: "3"
+services:
+  bearer:
+    platform: linux/amd64
+    image: bearer/bearer:latest-amd64
+    volumes:
+      - ./src/main/java:/tmp/scan
+    command:
+      - scan /tmp/scan

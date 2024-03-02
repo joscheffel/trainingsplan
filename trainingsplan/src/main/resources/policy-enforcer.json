@@ -1,0 +1,8 @@
+{
+  "realm": "trainingsapp",
+  "auth-server-url": "http://localhost:8081",
+  "resource": "trainingsbackend-client",
+  "credentials": {
+    "secret": "umsut01QvNuH75RXG1nmdMUQ6A4aCklY"
+  }
+}
