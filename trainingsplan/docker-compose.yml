@@ -1,0 +1,65 @@
+version: '3'
+
+services:
+  keycloak:
+    image: quay.io/keycloak/keycloak:latest
+    restart: on-failure
+#    volumes:
+#      - ./config:/config/
+    environment:
+      KC_DB_USERNAME: ${KEYCLOAK_DB_USERNAME}
+      KC_DB_PASSWORD: ${KEYCLOAK_DB_PASSWORD}
+      KC_DB_URL: jdbc:postgresql://keycloak-db/${KEYCLOAK_DB_DATABASE}
+      KC_DB: postgres
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+    ports:
+      - "8081:8080"
+    command:
+      - start-dev
+    depends_on:
+      - keycloak-db
+    networks:
+      - trainings_network
+      - keycloak_network
+
+  keycloak-db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: ${KEYCLOAK_DB_USERNAME}
+      POSTGRES_PASSWORD: ${KEYCLOAK_DB_PASSWORD}
+      POSTGRES_DB: ${KEYCLOAK_DB_DATABASE}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - keycloak_network
+
+  trainings-db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: ${APP_DB_USERNAME}
+      POSTGRES_PASSWORD: ${APP_DB_PASSWORD:-secret}
+      POSTGRES_DB: ${APP_DB_DATABASE}
+    volumes:
+      - trainingsData:/var/lib/postgresql/data
+    networks:
+      - trainings_network
+    ports:
+      - '${APP_DB_PORT:-5432}:5432'
+#  bearer:
+#    platform: linux/amd64
+#    image: bearer/bearer:latest-amd64
+#    volumes:
+#      - ./src/main/java:/tmp/scan
+#    command:
+#      - scan /tmp/scan
+
+networks:
+  trainings_network:
+    driver: bridge
+  keycloak_network:
+    driver: bridge
+
+volumes:
+  pgdata:
+  trainingsData:
