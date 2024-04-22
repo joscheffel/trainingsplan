@@ -4,6 +4,7 @@ import de.joscheffel.trainingsplan.exercises.dtos.ExerciseRequestDto;
 import de.joscheffel.trainingsplan.exercises.dtos.ExerciseResponseDto;
 import de.joscheffel.trainingsplan.exercises.mapper.ExerciseMapper;
 import de.joscheffel.trainingsplan.utils.Response;
+import jakarta.transaction.NotSupportedException;
 import java.util.List;
 import java.util.Objects;
 import org.springframework.stereotype.Service;
@@ -32,6 +33,13 @@ public class ExerciseServiceImpl implements ExerciseService {
       return Response.error("Not Found");
     }
     return Response.error("Bad Request");
+  }
+
+  @Override
+  public Response<List<ExerciseResponseDto>> showAll() {
+    var exercises = exerciseRepository.findAll();
+    var exerciseResponseDtos = exerciseMapper.mapExerciseListToExerciseResponseDtoList(exercises);
+    return Response.of(exerciseResponseDtos);
   }
 
   @Override
@@ -75,7 +83,7 @@ public class ExerciseServiceImpl implements ExerciseService {
       var exerciseOptional = exerciseRepository.findById(id);
       if (exerciseOptional.isPresent()) {
         exerciseRepository.deleteById(id);
-        if (exerciseRepository.existsById(id)) {
+        if (!exerciseRepository.existsById(id)) {
           var exerciseResponseDto = exerciseMapper.mapExerciseToExerciseResponseDto(
               exerciseOptional.get());
           return Response.of(exerciseResponseDto);

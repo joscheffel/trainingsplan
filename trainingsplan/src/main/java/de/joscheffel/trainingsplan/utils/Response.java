@@ -29,8 +29,8 @@ public record Response<T>(T entity, String errorMessage) {
      * @param errorMessage The error message of the occurred error.
      * @return {@link Response} with an error message
      */
-    public static Response error(String errorMessage) {
-        return new Response(null, errorMessage);
+    public static <T> Response<T> error(String errorMessage) {
+        return new Response<>(null, errorMessage);
     }
 
     /**

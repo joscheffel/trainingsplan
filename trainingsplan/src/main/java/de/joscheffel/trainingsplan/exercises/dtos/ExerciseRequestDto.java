@@ -1,10 +1,12 @@
 package de.joscheffel.trainingsplan.exercises.dtos;
 
-import de.joscheffel.trainingsplan.devices.dtos.DeviceResponseDto;
-import java.util.List;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 
-public record ExerciseRequestDto(String name, String description, String pictureUrl,
-                                 List<DeviceResponseDto> devices, List<String> toolkits,
-                                 String owner) {
+public record ExerciseRequestDto(@NotBlank(message = "Name is mandatory") @Size(max = 400) String name,
+                                 @Size(max = 400) String description,
+                                 @Size(max = 400) String pictureUrl,
+//                                 List<String> devices, List<String> toolkits,
+                                 @Size(max = 400) String owner) {
 
 }

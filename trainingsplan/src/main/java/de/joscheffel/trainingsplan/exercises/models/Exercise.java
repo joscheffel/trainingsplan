@@ -18,7 +18,7 @@ public class Exercise {
   private String description;
   private String pictureUrl;
 
-//  private List<DeviceResponseDto> devices;
+//  private List<Devices> devices;
 //  private List<String> toolkits;
   private String owner;
 
