@@ -2,8 +2,15 @@ package de.joscheffel.trainingsplan.exercises;
 
 import de.joscheffel.trainingsplan.exercises.dtos.ExerciseRequestDto;
 import de.joscheffel.trainingsplan.exercises.dtos.ExerciseResponseDto;
+import de.joscheffel.trainingsplan.exercises.variations.VariationService;
 import de.joscheffel.trainingsplan.generics.EntityRestController;
-import org.springframework.validation.annotation.Validated;
+import de.joscheffel.trainingsplan.utils.Response;
+import java.security.Principal;
+import java.util.Objects;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -12,11 +19,25 @@ import org.springframework.web.bind.annotation.RestController;
 public class ExerciseController extends
     EntityRestController<ExerciseRequestDto, ExerciseResponseDto, String> {
 
-  private final ExerciseService exerciseService;
+  private final VariationService variationService;
 
-  public ExerciseController(ExerciseService exerciseService) {
+  public ExerciseController(ExerciseService exerciseService, VariationService variationService) {
     super(exerciseService);
-    this.exerciseService = exerciseService;
+    this.variationService = variationService;
+  }
+
+  @GetMapping("/{id}/variations")
+  public ResponseEntity<?> getAllVariationsByExercise(Principal principal,
+      @PathVariable String id) {
+    if (Objects.nonNull(id)) {
+      var variationServiceResponse = variationService.showAllForExerciseId(id);
+
+      if (Objects.nonNull(variationServiceResponse)) {
+        return responseToResponseEntity(variationServiceResponse, HttpStatus.OK,
+            HttpStatus.NOT_FOUND);
+      }
+    }
+    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ERROR_OPERATION_FAILURE);
   }
 
 //  @GetMapping
