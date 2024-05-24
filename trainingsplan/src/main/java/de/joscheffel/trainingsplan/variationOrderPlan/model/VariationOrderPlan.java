@@ -1,4 +1,4 @@
-package de.joscheffel.trainingsplan.execution.model;
+package de.joscheffel.trainingsplan.variationOrderPlan.model;
 
 import de.joscheffel.trainingsplan.exercises.variations.model.Variation;
 import de.joscheffel.trainingsplan.plan.model.Plan;
@@ -7,11 +7,10 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToOne;
 import java.util.Objects;
 
 @Entity
-public class Execution {
+public class VariationOrderPlan {
   @Id
   @GeneratedValue(strategy = GenerationType.UUID)
   private String id;
@@ -24,7 +23,7 @@ public class Execution {
 
   // private Feedback feedback;
 
-  private int executionOrder;
+  private int exerciseVariationOrder;
 
   public String getId() {
     return id;
@@ -50,12 +49,12 @@ public class Execution {
     this.plan = plan;
   }
 
-  public int getExecutionOrder() {
-    return executionOrder;
+  public int getExerciseVariationOrder() {
+    return exerciseVariationOrder;
   }
 
-  public void setExecutionOrder(int executionOrder) {
-    this.executionOrder = executionOrder;
+  public void setExerciseVariationOrder(int exerciseVariationOrder) {
+    this.exerciseVariationOrder = exerciseVariationOrder;
   }
 
   @Override
@@ -66,14 +65,14 @@ public class Execution {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    Execution execution = (Execution) o;
-    return executionOrder == execution.executionOrder && Objects.equals(id, execution.id)
-        && Objects.equals(variation.getId(), execution.variation.getId()) && Objects.equals(plan.getId(),
-        execution.plan.getId());
+    VariationOrderPlan variationOrderPlan = (VariationOrderPlan) o;
+    return exerciseVariationOrder == variationOrderPlan.exerciseVariationOrder && Objects.equals(id, variationOrderPlan.id)
+        && Objects.equals(variation.getId(), variationOrderPlan.variation.getId()) && Objects.equals(plan.getId(),
+        variationOrderPlan.plan.getId());
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(id, variation, plan, executionOrder);
+    return Objects.hash(id, variation, plan, exerciseVariationOrder);
   }
 }
