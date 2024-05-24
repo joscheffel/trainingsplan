@@ -99,4 +99,12 @@ public class VariationServiceImpl implements VariationService {
     }
     return Response.error(ERROR_COULDNT_SUCCEED_THE_OPERATION);
   }
+
+  @Override
+  public Response<List<VariationResponseDto>> showAllForExerciseId(String exerciseId) {
+    var variations = variationRepository.findAllByExerciseId(exerciseId);
+    var variationResponseDtos = variationMapper.mapVariationListToVariationResponseDtoList(
+        variations);
+    return Response.of(variationResponseDtos);
+  }
 }
