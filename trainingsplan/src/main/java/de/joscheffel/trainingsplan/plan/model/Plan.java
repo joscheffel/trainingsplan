@@ -1,13 +1,12 @@
 package de.joscheffel.trainingsplan.plan.model;
 
-import jakarta.persistence.Column;
+import de.joscheffel.trainingsplan.plan.order.model.SubPlanOrder;
+import de.joscheffel.trainingsplan.plan.order.model.VariationOrderPlan;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.ManyToMany;
 import jakarta.persistence.OneToMany;
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
@@ -19,20 +18,30 @@ public class Plan {
 
   private String name;
 
-  private String Description;
+  private String description;
 
-  private int planOrder;
-
-  @Column(columnDefinition = "TIMESTAMP")
-  private LocalDateTime startDateTime;
-
-  @Column(columnDefinition = "TIMESTAMP")
-  private LocalDateTime endDateTime;
+//  @Column(columnDefinition = "TIMESTAMP")
+//  private LocalDateTime startDateTime;
+//
+//  @Column(columnDefinition = "TIMESTAMP")
+//  private LocalDateTime endDateTime;
 
   // private List<CategoryTag> tags;
 
-  @ManyToMany
-  private List<Plan> plans;
+  @OneToMany
+  private List<SubPlanOrder> subPlanOrders;
+
+  @OneToMany
+  private List<VariationOrderPlan> variationOrderPlans;
+
+  public List<VariationOrderPlan> getVariationOrderPlans() {
+    return variationOrderPlans;
+  }
+
+  public void setVariationOrderPlans(
+      List<VariationOrderPlan> variationOrderPlans) {
+    this.variationOrderPlans = variationOrderPlans;
+  }
 
   public String getId() {
     return id;
@@ -51,42 +60,19 @@ public class Plan {
   }
 
   public String getDescription() {
-    return Description;
+    return description;
   }
 
   public void setDescription(String description) {
-    Description = description;
+    this.description = description;
   }
 
-  public int getPlanOrder() {
-    return planOrder;
+  public List<SubPlanOrder> getSubPlanOrders() {
+    return subPlanOrders;
   }
 
-  public void setPlanOrder(int planOrder) {
-    this.planOrder = planOrder;
-  }
-
-  public LocalDateTime getStartDateTime() {
-    return startDateTime;
-  }
-
-  public void setStartDateTime(LocalDateTime startDateTime) {
-    this.startDateTime = startDateTime;
-  }
-
-  public LocalDateTime getEndDateTime() {
-    return endDateTime;
-  }
-
-  public void setEndDateTime(LocalDateTime endDateTime) {
-    this.endDateTime = endDateTime;
-  }
-
-  public List<Plan> getPlans() {
-    return plans;
-  }
-
-  public void setPlans(List<Plan> plans) {
-    this.plans = plans;
+  public void setSubPlanOrders(
+      List<SubPlanOrder> subPlanOrders) {
+    this.subPlanOrders = subPlanOrders;
   }
 }

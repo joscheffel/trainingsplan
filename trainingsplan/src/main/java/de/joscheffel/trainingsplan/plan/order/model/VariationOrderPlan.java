@@ -1,25 +1,24 @@
-package de.joscheffel.trainingsplan.variationOrderPlan.model;
+package de.joscheffel.trainingsplan.plan.order.model;
 
 import de.joscheffel.trainingsplan.exercises.variations.model.Variation;
-import de.joscheffel.trainingsplan.plan.model.Plan;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import java.util.Objects;
 
 @Entity
 public class VariationOrderPlan {
+
   @Id
   @GeneratedValue(strategy = GenerationType.UUID)
   private String id;
 
   @ManyToOne
+  @JoinColumn(name = "variation_id", nullable = false)
   private Variation variation;
-
-  @ManyToOne
-  private Plan plan;
 
   // private Feedback feedback;
 
@@ -41,14 +40,6 @@ public class VariationOrderPlan {
     this.variation = variation;
   }
 
-  public Plan getPlan() {
-    return plan;
-  }
-
-  public void setPlan(Plan plan) {
-    this.plan = plan;
-  }
-
   public int getExerciseVariationOrder() {
     return exerciseVariationOrder;
   }
@@ -66,13 +57,13 @@ public class VariationOrderPlan {
       return false;
     }
     VariationOrderPlan variationOrderPlan = (VariationOrderPlan) o;
-    return exerciseVariationOrder == variationOrderPlan.exerciseVariationOrder && Objects.equals(id, variationOrderPlan.id)
-        && Objects.equals(variation.getId(), variationOrderPlan.variation.getId()) && Objects.equals(plan.getId(),
-        variationOrderPlan.plan.getId());
+    return exerciseVariationOrder == variationOrderPlan.exerciseVariationOrder && Objects.equals(id,
+        variationOrderPlan.id) && Objects.equals(variation.getId(),
+        variationOrderPlan.variation.getId());
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(id, variation, plan, exerciseVariationOrder);
+    return Objects.hash(id, variation, exerciseVariationOrder);
   }
 }
