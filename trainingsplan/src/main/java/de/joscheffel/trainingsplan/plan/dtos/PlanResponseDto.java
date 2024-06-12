@@ -1,10 +1,11 @@
 package de.joscheffel.trainingsplan.plan.dtos;
 
-import java.time.LocalDateTime;
+import de.joscheffel.trainingsplan.plan.order.dto.SubPlanOrderDto;
+import de.joscheffel.trainingsplan.plan.order.dto.VariationOrderPlanDto;
 import java.util.List;
 
-public record PlanResponseDto(String id, String name, String description, int planOrder,
-                              LocalDateTime startDateTime, LocalDateTime endDateTime,
-                              List<String> planIds) {
+public record PlanResponseDto(String id, String name, String description,
+                              List<SubPlanOrderDto> subPlanOrders,
+                              List<VariationOrderPlanDto> variationOrderPlans) {
 
 }
