@@ -33,19 +33,19 @@ public class UserServiceImpl implements UserService {
 
   @Override
   public Response<UserResponseDto> show(String id) {
-    return Response.error(ERROR_NOT_SUPPORTED_YET);
-//    var user = userRepository.findById(id);
-//
-//    return user.map(value -> Response.of(userMapper.mapUserToUserResponseDto(value)))
-//        .orElseGet(() -> Response.error(ERROR_COULDNT_SUCCEED_THE_OPERATION));
+//    return Response.error(ERROR_NOT_SUPPORTED_YET);
+    var user = userRepository.findById(id);
+
+    return user.map(value -> Response.of(userMapper.mapUserToUserResponseDto(value)))
+        .orElseGet(() -> Response.error(ERROR_COULDNT_SUCCEED_THE_OPERATION));
   }
 
   @Override
   public Response<List<UserResponseDto>> showAll() {
-    return Response.error(ERROR_NOT_SUPPORTED_YET);
-//    var users = userRepository.findAll();
-//    var userResponseDtos = users.stream().map(userMapper::mapUserToUserResponseDto).toList();
-//    return Response.of(userResponseDtos);
+//    return Response.error(ERROR_NOT_SUPPORTED_YET);
+    var users = userRepository.findAll();
+    var userResponseDtos = users.stream().map(userMapper::mapUserToUserResponseDto).toList();
+    return Response.of(userResponseDtos);
   }
 
   @Override
