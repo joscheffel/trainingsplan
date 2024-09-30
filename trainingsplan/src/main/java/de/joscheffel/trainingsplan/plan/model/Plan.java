@@ -2,11 +2,14 @@ package de.joscheffel.trainingsplan.plan.model;
 
 import de.joscheffel.trainingsplan.plan.order.model.SubPlanOrder;
 import de.joscheffel.trainingsplan.plan.order.model.VariationOrderPlan;
+import de.joscheffel.trainingsplan.resource_access_control.Resource;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
 import java.util.List;
 
 @Entity
@@ -34,12 +37,14 @@ public class Plan {
   @OneToMany
   private List<VariationOrderPlan> variationOrderPlans;
 
+  @OneToOne(cascade = CascadeType.ALL)
+  private Resource resource;
+
   public List<VariationOrderPlan> getVariationOrderPlans() {
     return variationOrderPlans;
   }
 
-  public void setVariationOrderPlans(
-      List<VariationOrderPlan> variationOrderPlans) {
+  public void setVariationOrderPlans(List<VariationOrderPlan> variationOrderPlans) {
     this.variationOrderPlans = variationOrderPlans;
   }
 
@@ -71,8 +76,15 @@ public class Plan {
     return subPlanOrders;
   }
 
-  public void setSubPlanOrders(
-      List<SubPlanOrder> subPlanOrders) {
+  public void setSubPlanOrders(List<SubPlanOrder> subPlanOrders) {
     this.subPlanOrders = subPlanOrders;
+  }
+
+  public Resource getResource() {
+    return resource;
+  }
+
+  public void setResource(Resource resource) {
+    this.resource = resource;
   }
 }

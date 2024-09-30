@@ -1,12 +1,12 @@
 package de.joscheffel.trainingsplan.exercises.models;
 
-import de.joscheffel.trainingsplan.devices.dtos.DeviceResponseDto;
+import de.joscheffel.trainingsplan.resource_access_control.Resource;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import java.util.List;
-import java.util.Objects;
+import jakarta.persistence.OneToOne;
 
 @Entity
 public class Exercise {
@@ -20,7 +20,9 @@ public class Exercise {
 
 //  private List<Devices> devices;
 //  private List<String> toolkits;
-  private String owner;
+
+  @OneToOne(cascade = CascadeType.ALL)
+  private Resource resource;
 
   public String getId() {
     return id;
@@ -70,15 +72,15 @@ public class Exercise {
 //    this.toolkits = toolkits;
 //  }
 
-  public String getOwner() {
-    return owner;
+  public Resource getResource() {
+    return resource;
   }
 
-  public void setOwner(String owner) {
-    this.owner = owner;
+  public void setResource(Resource resource) {
+    this.resource = resource;
   }
 
-//  @Override
+  //  @Override
 //  public boolean equals(Object o) {
 //    if (this == o) {
 //      return true;

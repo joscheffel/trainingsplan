@@ -1,6 +1,7 @@
 package de.joscheffel.trainingsplan.plan;
 
 import de.joscheffel.trainingsplan.exercises.variations.VariationRepository;
+import de.joscheffel.trainingsplan.generics.KeyValuePair;
 import de.joscheffel.trainingsplan.plan.dtos.PlanRequestDto;
 import de.joscheffel.trainingsplan.plan.dtos.PlanResponseDto;
 import de.joscheffel.trainingsplan.plan.mapper.PlanMapper;
@@ -12,6 +13,13 @@ import de.joscheffel.trainingsplan.plan.order.mapper.SubPlanOrderMapper;
 import de.joscheffel.trainingsplan.plan.order.mapper.VariationOrderPlanMapper;
 import de.joscheffel.trainingsplan.plan.order.model.SubPlanOrder;
 import de.joscheffel.trainingsplan.plan.order.model.VariationOrderPlan;
+import de.joscheffel.trainingsplan.resource_access_control.EntityTypes;
+import de.joscheffel.trainingsplan.resource_access_control.Permission;
+import de.joscheffel.trainingsplan.resource_access_control.PermissionService;
+import de.joscheffel.trainingsplan.resource_access_control.PermissionType;
+import de.joscheffel.trainingsplan.resource_access_control.Resource;
+import de.joscheffel.trainingsplan.resource_access_control.ResourceRepository;
+import de.joscheffel.trainingsplan.user.model.User;
 import de.joscheffel.trainingsplan.utils.Response;
 import java.util.ArrayList;
 import java.util.List;
@@ -32,12 +40,15 @@ public class PlanServiceImpl implements PlanService {
   private final SubPlanOrderRepository subPlanOrderRepository;
   private final VariationOrderPlanRepository variationOrderPlanRepository;
   private final VariationRepository variationRepository;
+  private final PermissionService permissionService;
+  private final ResourceRepository resourceRepository;
 
   public PlanServiceImpl(PlanMapper planMapper, SubPlanOrderMapper subPlanOrderMapper,
       VariationOrderPlanMapper variationOrderPlanMapper, PlanRepository planRepository,
       SubPlanOrderRepository subPlanOrderRepository,
       VariationOrderPlanRepository variationOrderPlanRepository,
-      VariationRepository variationRepository) {
+      VariationRepository variationRepository, PermissionService permissionService,
+      ResourceRepository resourceRepository) {
     this.planMapper = planMapper;
     this.subPlanOrderMapper = subPlanOrderMapper;
     this.variationOrderPlanMapper = variationOrderPlanMapper;
@@ -45,17 +56,18 @@ public class PlanServiceImpl implements PlanService {
     this.subPlanOrderRepository = subPlanOrderRepository;
     this.variationOrderPlanRepository = variationOrderPlanRepository;
     this.variationRepository = variationRepository;
+    this.permissionService = permissionService;
+    this.resourceRepository = resourceRepository;
   }
 
   @Override
-  public Response<PlanResponseDto> store(PlanRequestDto planRequestDto) {
+  public Response<PlanResponseDto> store(PlanRequestDto planRequestDto, User requestingUser) {
     var subPlanOrdersResponse = retrieveSubPlanOrders(planRequestDto.subPlanOrders());
     if (subPlanOrdersResponse.isError()) {
       return Response.error(subPlanOrdersResponse.errorMessage());
     }
 
-    var variationOrderPlansResponse = retrieveVariationOrders(
-        planRequestDto.variationOrderPlans());
+    var variationOrderPlansResponse = retrieveVariationOrders(planRequestDto.variationOrderPlans());
     if (variationOrderPlansResponse.isError()) {
       return Response.error(variationOrderPlansResponse.errorMessage());
     }
@@ -65,35 +77,60 @@ public class PlanServiceImpl implements PlanService {
     plan.setVariationOrderPlans(variationOrderPlansResponse.entity());
     var storedPlan = planRepository.save(plan);
 
+    // Create Resource for this Exercise
+    Resource resource = new Resource();
+    resource.setEntityId(storedPlan.getId());
+    resource.setEntityType(EntityTypes.PLAN.name());
+    resourceRepository.save(resource);
+
+    storedPlan.setResource(resource);
+    planRepository.save(storedPlan);
+
+    // Assign Ownership Permission
+    permissionService.addPermission(requestingUser, resource, PermissionType.OWNER);
+
     if (planRepository.existsById(storedPlan.getId())) {
-      var planResponseDto = planMapper.mapPlanToPlanResponseDto(storedPlan);
+      var planResponseDto = planMapper.mapEntityAndAccessToEntityResponseDto(storedPlan,
+          permissionService.retrieveAccessControlFrom(storedPlan.getResource()));
       return Response.of(planResponseDto);
     }
     return Response.error(ERROR_COULDNT_SUCCEED_THE_OPERATION);
   }
 
   @Override
-  public Response<PlanResponseDto> show(String id) {
-    if (Objects.nonNull(id) && StringUtils.hasText(id)) {
-      var planOptional = planRepository.findById(id);
+  public Response<PlanResponseDto> show(String id, User requestingUser) {
+    var permissionOptional = permissionService.retrievePermissionForUserAndEntityTypeAndEntityId(
+        requestingUser, EntityTypes.PLAN, id);
+    if (Objects.nonNull(id) && StringUtils.hasText(id) && permissionOptional.isPresent()) {
+      var planOptional = planRepository.findByIdAndResource(id,
+          permissionOptional.get().getResource());
       if (planOptional.isPresent()) {
-        var planResponseDto = planMapper.mapPlanToPlanResponseDto(planOptional.get());
+        var planResponseDto = planMapper.mapEntityAndAccessToEntityResponseDto(planOptional.get(),
+            permissionService.retrieveAccessControlFrom(planOptional.get().getResource()));
         return Response.of(planResponseDto);
       }
       return Response.error("Not Found");
+    } else if (permissionOptional.isEmpty()) {
+      return Response.error("Resource couldn't be found or isn't allowed");
     }
     return Response.error("Bad Request");
   }
 
   @Override
-  public Response<List<PlanResponseDto>> showAll() {
-    var plans = planRepository.findAll();
-    var planResponseDtos = planMapper.mapPlanListToPlanResponseDtoList(plans);
+  public Response<List<PlanResponseDto>> showAll(User requestingUser) {
+    var list = permissionService.retrievePermissionsForUserAndResourceEntityType(requestingUser,
+        EntityTypes.PLAN);
+    var plans = planRepository.findAllByResourceIn(
+        list.stream().map(Permission::getResource).toList());
+    var planResponseDtos = plans.stream().map(
+        plan -> planMapper.mapEntityAndAccessToEntityResponseDto(plan,
+            permissionService.retrieveAccessControlFrom(plan.getResource()))).toList();
     return Response.of(planResponseDtos);
   }
 
   @Override
-  public Response<PlanResponseDto> update(String id, PlanRequestDto planRequestDto) {
+  public Response<PlanResponseDto> update(String id, PlanRequestDto planRequestDto,
+      User requestingUser) {
     if (Objects.nonNull(id) && StringUtils.hasText(id)) {
       if (planRepository.existsById(id)) {
         var subPlanOrdersResponse = retrieveSubPlanOrders(planRequestDto.subPlanOrders());
@@ -111,10 +148,19 @@ public class PlanServiceImpl implements PlanService {
         plan.setSubPlanOrders(subPlanOrdersResponse.entity());
         plan.setVariationOrderPlans(variationOrderPlansResponse.entity());
         plan.setId(id);
+
+        // make sure the resource object stays the same
+        var existingPlan = planRepository.findById(id);
+        if (existingPlan.isEmpty()) {
+          return Response.error("Not Found");
+        }
+        plan.setResource(existingPlan.get().getResource());
+
         var storedPlan = planRepository.save(plan);
 
         if (planRepository.existsById(storedPlan.getId())) {
-          var planResponseDto = planMapper.mapPlanToPlanResponseDto(storedPlan);
+          var planResponseDto = planMapper.mapEntityAndAccessToEntityResponseDto(storedPlan,
+              permissionService.retrieveAccessControlFrom(plan.getResource()));
           return Response.of(planResponseDto);
         }
         return Response.error(ERROR_COULDNT_SUCCEED_THE_OPERATION);
@@ -123,15 +169,17 @@ public class PlanServiceImpl implements PlanService {
     return Response.error(ERROR_COULDNT_SUCCEED_THE_OPERATION);
   }
 
+  // ToDo: delete permissions and Resource to! Maybe parts with cascade already done?
   @Override
-  public Response<PlanResponseDto> deleteById(String id) {
+  public Response<PlanResponseDto> deleteById(String id, User requestingUser) {
     if (Objects.nonNull(id) && StringUtils.hasText(id)) {
       var planOptional = planRepository.findById(id);
       if (planOptional.isPresent()) {
         planRepository.deleteById(id);
         if (!planRepository.existsById(id)) {
 
-          var planResponseDto = planMapper.mapPlanToPlanResponseDto(planOptional.get());
+          var planResponseDto = planMapper.mapEntityAndAccessToEntityResponseDto(planOptional.get(),
+              permissionService.retrieveAccessControlFrom(planOptional.get().getResource()));
           return Response.of(planResponseDto);
         }
       }
@@ -155,7 +203,7 @@ public class PlanServiceImpl implements PlanService {
     subPlanOrders.addAll(existingSubPlanOrders.stream().map(subPlanOrder -> {
       var tmpSubPlanSubmittedWithId = subPlansSubmittedWithId.stream()
           .filter(subPlanOrderDto -> subPlanOrderDto.id() == subPlanOrder.getId()).findFirst();
-      if(tmpSubPlanSubmittedWithId.isPresent()) {
+      if (tmpSubPlanSubmittedWithId.isPresent()) {
         subPlanOrder.setPlanOrder(tmpSubPlanSubmittedWithId.get().planOrder());
         return subPlanOrder;
       }
@@ -195,13 +243,12 @@ public class PlanServiceImpl implements PlanService {
 
     var variationOrderPlans = new ArrayList<VariationOrderPlan>();
     variationOrderPlans.addAll(existingVariationOrderPlans.stream().map(variationOrderPlan -> {
-      var tmpVariationOrderPlanSubmittedWithId = variationOrderPlansSubmittedWithId.stream()
-          .filter(variationOrderPlanDto -> Objects.equals(variationOrderPlanDto.id(),
-              variationOrderPlan.getId()))
-          .findFirst();
-      if(tmpVariationOrderPlanSubmittedWithId.isPresent()) {
-        variationOrderPlan.setExerciseVariationOrder(
-            tmpVariationOrderPlanSubmittedWithId.get().executionOrder()); // Todo: needs to be fixed execution order!
+      var tmpVariationOrderPlanSubmittedWithId = variationOrderPlansSubmittedWithId.stream().filter(
+          variationOrderPlanDto -> Objects.equals(variationOrderPlanDto.id(),
+              variationOrderPlan.getId())).findFirst();
+      if (tmpVariationOrderPlanSubmittedWithId.isPresent()) {
+        variationOrderPlan.setExerciseVariationOrder(tmpVariationOrderPlanSubmittedWithId.get()
+            .executionOrder()); // Todo: needs to be fixed execution order!
         return variationOrderPlan;
       }
       return null;
@@ -224,5 +271,21 @@ public class PlanServiceImpl implements PlanService {
     }
 
     return Response.of(variationOrderPlans);
+  }
+
+  @Override
+  public Response<Boolean> addPermission(String entityId, User user,
+      KeyValuePair<String, String> userIdPermissionTypeKeyValuePair) {
+    return permissionService.addPermissionByEntityIdAndType(entityId, EntityTypes.PLAN,
+        userIdPermissionTypeKeyValuePair.key(),
+        PermissionType.fromValue(userIdPermissionTypeKeyValuePair.value()));
+  }
+
+  @Override
+  public Response<Boolean> removePermission(String entityId, User user,
+      KeyValuePair<String, String> userIdPermissionTypeKeyValuePair) {
+    return permissionService.removePermissionByEntityIdAndType(entityId, EntityTypes.EXERCISE,
+        userIdPermissionTypeKeyValuePair.key(),
+        PermissionType.fromValue(userIdPermissionTypeKeyValuePair.value()));
   }
 }

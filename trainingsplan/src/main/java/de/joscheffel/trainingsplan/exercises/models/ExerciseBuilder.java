@@ -11,7 +11,6 @@ public final class ExerciseBuilder {
   private String pictureUrl;
   private List<DeviceResponseDto> devices;
   private List<String> toolkits;
-  private String owner;
 
   private ExerciseBuilder() {
   }
@@ -50,10 +49,6 @@ public final class ExerciseBuilder {
     return this;
   }
 
-  public ExerciseBuilder withOwner(String owner) {
-    this.owner = owner;
-    return this;
-  }
 
   public Exercise build() {
     Exercise exercise = new Exercise();
@@ -63,7 +58,6 @@ public final class ExerciseBuilder {
     exercise.setPictureUrl(pictureUrl);
 //    exercise.setDevices(devices);
 //    exercise.setToolkits(toolkits);
-    exercise.setOwner(owner);
     return exercise;
   }
 }

@@ -1,11 +1,14 @@
 package de.joscheffel.trainingsplan.exercises.variations.model;
 
 import de.joscheffel.trainingsplan.exercises.models.Exercise;
+import de.joscheffel.trainingsplan.resource_access_control.Resource;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToOne;
 import java.util.Objects;
 
 @Entity
@@ -25,6 +28,9 @@ public class Variation {
 //  private VariationType variationType;
 //
 //  private List<CategoryTag> categoryTag;
+
+  @OneToOne(cascade = CascadeType.ALL)
+  private Resource resource;
 
 
   public String getId() {
@@ -59,6 +65,14 @@ public class Variation {
     this.owner = owner;
   }
 
+  public Resource getResource() {
+    return resource;
+  }
+
+  public void setResource(Resource resource) {
+    this.resource = resource;
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o) {
@@ -68,9 +82,9 @@ public class Variation {
       return false;
     }
     Variation variation = (Variation) o;
-    return Objects.equals(id, variation.id) && Objects.equals(exercise.getId(), variation.exercise.getId())
-        && Objects.equals(description, variation.description) && Objects.equals(owner,
-        variation.owner);
+    return Objects.equals(id, variation.id) && Objects.equals(exercise.getId(),
+        variation.exercise.getId()) && Objects.equals(description, variation.description)
+        && Objects.equals(owner, variation.owner);
   }
 
   @Override

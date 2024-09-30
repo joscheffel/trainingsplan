@@ -1,18 +1,23 @@
 package de.joscheffel.trainingsplan.plan.mapper;
 
 
+import de.joscheffel.trainingsplan.generics.EntityAccessMapperIF;
 import de.joscheffel.trainingsplan.plan.dtos.PlanRequestDto;
 import de.joscheffel.trainingsplan.plan.dtos.PlanResponseDto;
 import de.joscheffel.trainingsplan.plan.model.Plan;
 import de.joscheffel.trainingsplan.plan.order.mapper.SubPlanOrderMapper;
 import de.joscheffel.trainingsplan.plan.order.mapper.VariationOrderPlanMapper;
+import de.joscheffel.trainingsplan.resource_access_control.AccessControlWrapper;
 import java.util.List;
 import java.util.Objects;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
-@Mapper(componentModel = "spring", uses = {SubPlanOrderMapper.class, VariationOrderPlanMapper.class})
-public interface PlanMapper {
+@Mapper(componentModel = "spring", uses = {SubPlanOrderMapper.class,
+    VariationOrderPlanMapper.class})
+public interface PlanMapper extends
+    EntityAccessMapperIF<Plan, AccessControlWrapper, PlanResponseDto> {
+
   Plan mapPlanRequestDtoToPlan(PlanRequestDto planRequestDto);
 
 
