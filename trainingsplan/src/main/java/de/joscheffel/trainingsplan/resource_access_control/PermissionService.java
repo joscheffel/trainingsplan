@@ -114,7 +114,7 @@ public class PermissionService {
         Collectors.mapping(Permission::getPermissionType, Collectors.toList())));
     return permissionsByUser.entrySet().stream().map(
         entry -> new AccessControlWrapper(entry.getKey().getId(), entry.getKey().getPseudonym(),
-            entry.getValue())).toList();
+            entry.getKey().getKeycloakUserId(), entry.getValue())).toList();
   }
 
   public List<Permission> retrievePermissionsForUserAndResourceEntityType(User user,
@@ -122,8 +122,10 @@ public class PermissionService {
     return permissionRepository.findAllByUserAndResourceEntityType(user, entityType.name());
   }
 
-  public Optional<Permission> retrievePermissionForUserAndEntityTypeAndEntityId(User user, EntityTypes entityType, String entityId) {
-    var resourceOptional = resourceRepository.findResourceByEntityIdAndEntityType(entityId, entityType.name());
+  public Optional<Permission> retrievePermissionForUserAndEntityTypeAndEntityId(User user,
+      EntityTypes entityType, String entityId) {
+    var resourceOptional = resourceRepository.findResourceByEntityIdAndEntityType(entityId,
+        entityType.name());
     if (resourceOptional.isPresent()) {
       return permissionRepository.findPermissionByUserAndResource(user, resourceOptional.get());
     }
